@@ -8,17 +8,12 @@ const api = axios.create({
 });
 
 const normalizePrediction = (payload) => {
-  const probability =
-    typeof payload?.probability === 'number'
-      ? payload.probability
-      : payload?.churned === 1
-      ? 0.82
-      : 0.18;
+  const probability = typeof payload?.probability === 'number' ? payload.probability : null;
 
   let segment = 'Low';
-  if (probability > 0.7) {
+  if (probability !== null && probability > 0.7) {
     segment = 'High';
-  } else if (probability > 0.3) {
+  } else if (probability !== null && probability > 0.3) {
     segment = 'Medium';
   }
 
@@ -32,6 +27,11 @@ const normalizePrediction = (payload) => {
 export const predictCustomer = async (data) => {
   const response = await api.post('/predictAPI', data);
   return normalizePrediction(response.data);
+};
+
+export const fetchModelComparison = async () => {
+  const response = await api.get('/modelComparisonAPI');
+  return response.data;
 };
 
 export default api;

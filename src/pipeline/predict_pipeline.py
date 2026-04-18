@@ -16,7 +16,15 @@ class PredictPipeline:
             model = load_object(file_path=model_path)
             data_scaled = preprocessor.transform(features)
             pred = model.predict(data_scaled)
-            return pred
+            probability = None
+
+            if hasattr(model, 'predict_proba'):
+                probability = float(model.predict_proba(data_scaled)[0][1])
+
+            return {
+                'prediction': int(pred[0]),
+                'probability': probability,
+            }
         except Exception as e:
             logging.info('Exception occured in prediction pipeline')
             raise CustomException(e,sys)
@@ -72,4 +80,3 @@ class CustomData:
         except Exception as e:
             logging.info('Exception Occured in prediction pipeline')
             raise CustomException(e,sys)
-            
