@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #020617;
+  --bg-deep: #0b1120;
+  --text-main: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(1100px 700px at -5% -20%, rgba(249, 115, 22, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 100% -5%, rgba(16, 185, 129, 0.14), transparent 55%),
+    linear-gradient(180deg, var(--bg-main) 0%, var(--bg-deep) 100%);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Sora', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.62));
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 22px 40px rgba(2, 6, 23, 0.45);
+}
+
+@layer components {
+  .input-label {
+    @apply mb-2 block text-sm font-medium text-slate-300;
+  }
+
+  .input-control {
+    @apply w-full rounded-xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-slate-100 outline-none transition;
+  }
+
+  .input-control:focus {
+    @apply border-orange-400 ring-2 ring-orange-500/30;
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center justify-center rounded-xl bg-orange-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .secondary-btn {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-600 px-5 py-3 font-semibold text-slate-100 transition hover:border-slate-400 hover:text-white;
+  }
+}

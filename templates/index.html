@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Netflix Churn Prediction</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 24px;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .full {
+            grid-column: 1 / -1;
+        }
+        button {
+            background: #0f766e;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            width: fit-content;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #ecfeff;
+            border: 1px solid #99f6e4;
+            font-weight: 600;
+        }
+        @media (max-width: 720px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Netflix Customer Churn Prediction</h1>
+
+        <form action="/predict" method="post">
+            <div class="grid">
+                <div class="field">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" name="age" min="10" max="100" required />
+                </div>
+
+                <div class="field">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="subscription_type">Subscription Type</label>
+                    <select id="subscription_type" name="subscription_type" required>
+                        <option value="Basic">Basic</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Premium">Premium</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="watch_hours">Watch Hours</label>
+                    <input type="number" step="0.01" id="watch_hours" name="watch_hours" min="0" required />
+                </div>
+
+                <div class="field">
+                    <label for="last_login_days">Last Login Days</label>
+                    <input type="number" id="last_login_days" name="last_login_days" min="0" required />
+                </div>
+
+                <div class="field">
+                    <label for="region">Region</label>
+                    <select id="region" name="region" required>
+                        <option value="North America">North America</option>
+                        <option value="South America">South America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Africa">Africa</option>
+                        <option value="Oceania">Oceania</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="device">Device</label>
+                    <select id="device" name="device" required>
+                        <option value="Mobile">Mobile</option>
+                        <option value="TV">TV</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Tablet">Tablet</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="monthly_fee">Monthly Fee</label>
+                    <input type="number" step="0.01" id="monthly_fee" name="monthly_fee" min="0" required />
+                </div>
+
+                <div class="field">
+                    <label for="payment_method">Payment Method</label>
+                    <select id="payment_method" name="payment_method" required>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="PayPal">PayPal</option>
+                        <option value="Gift Card">Gift Card</option>
+                        <option value="Crypto">Crypto</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="number_of_profiles">Number of Profiles</label>
+                    <input type="number" id="number_of_profiles" name="number_of_profiles" min="1" max="10" required />
+                </div>
+
+                <div class="field">
+                    <label for="avg_watch_time_per_day">Avg Watch Time Per Day</label>
+                    <input type="number" step="0.01" id="avg_watch_time_per_day" name="avg_watch_time_per_day" min="0" required />
+                </div>
+
+                <div class="field">
+                    <label for="favorite_genre">Favorite Genre</label>
+                    <select id="favorite_genre" name="favorite_genre" required>
+                        <option value="Action">Action</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Horror">Horror</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Documentary">Documentary</option>
+                    </select>
+                </div>
+
+                <div class="field full">
+                    <button type="submit">Predict Churn</button>
+                </div>
+            </div>
+        </form>
+
+        {% if results %}
+        <div class="result">
+            Prediction: {{ results }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
