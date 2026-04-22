@@ -9,6 +9,7 @@ xgboost
 dill
 flask
 flask_cors
+gunicorn
 lime
 
 

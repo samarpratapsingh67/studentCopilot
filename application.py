@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, request, render_template,jsonify
 from flask_cors import CORS,cross_origin
 from src.pipeline.model_comparison import get_model_comparison_metrics
@@ -6,7 +8,15 @@ from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 application = Flask(__name__)
 
 app = application
-CORS(app)
+
+allowed_origins_env = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(',') if origin.strip()]
+CORS(app, resources={r'/*': {'origins': allowed_origins}})
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok'})
 
 @app.route('/')
 @cross_origin()
@@ -81,4 +91,4 @@ def model_comparison_api():
     return jsonify(comparison)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
