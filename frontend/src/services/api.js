@@ -36,4 +36,14 @@ export const fetchModelComparison = async () => {
   return response.data;
 };
 
+export const fetchDashboardStats = async () => {
+  const response = await api.get('/dashboardStatsAPI');
+  return response.data;
+};
+
+export const triggerRetrain = async () => {
+  const response = await api.post('/retrainAPI');
+  return response.data;
+};
+
 export default api;

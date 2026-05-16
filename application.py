@@ -4,6 +4,8 @@ from flask import Flask, request, render_template,jsonify
 from flask_cors import CORS,cross_origin
 from src.pipeline.model_comparison import get_model_comparison_metrics
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
+from src.pipeline.retrain_pipeline import retrain_from_db
+from src.database.services import DashboardService, PredictionService
 
 application = Flask(__name__)
 
@@ -51,6 +53,30 @@ def predict_datapoint():
         predict_pipeline = PredictPipeline()
         pred = predict_pipeline.predict(pred_df)
         results = 'Churned' if int(pred['prediction']) == 1 else 'Not Churned'
+
+        try:
+            PredictionService.save_prediction(
+                age=data.age,
+                gender=data.gender,
+                subscription_type=data.subscription_type,
+                watch_hours=data.watch_hours,
+                last_login_days=data.last_login_days,
+                region=data.region,
+                device=data.device,
+                monthly_fee=data.monthly_fee,
+                payment_method=data.payment_method,
+                number_of_profiles=data.number_of_profiles,
+                avg_watch_time_per_day=data.avg_watch_time_per_day,
+                favorite_genre=data.favorite_genre,
+                prediction=int(pred['prediction']),
+                prediction_status=results,
+                prediction_probability=pred['probability'],
+                source='form',
+                ip_address=request.remote_addr,
+            )
+        except Exception as save_error:
+            app.logger.exception("Failed to persist prediction: %s", save_error)
+
         return render_template('index.html',results=results,pred_df = pred_df)
     
 @app.route('/predictAPI',methods=['POST'])
@@ -76,9 +102,34 @@ def predict_api():
         predict_pipeline = PredictPipeline()
         pred = predict_pipeline.predict(pred_df)
 
+        results = 'Churned' if int(pred['prediction']) == 1 else 'Not Churned'
+
+        try:
+            PredictionService.save_prediction(
+                age=data.age,
+                gender=data.gender,
+                subscription_type=data.subscription_type,
+                watch_hours=data.watch_hours,
+                last_login_days=data.last_login_days,
+                region=data.region,
+                device=data.device,
+                monthly_fee=data.monthly_fee,
+                payment_method=data.payment_method,
+                number_of_profiles=data.number_of_profiles,
+                avg_watch_time_per_day=data.avg_watch_time_per_day,
+                favorite_genre=data.favorite_genre,
+                prediction=int(pred['prediction']),
+                prediction_status=results,
+                prediction_probability=pred['probability'],
+                source='api',
+                ip_address=request.remote_addr,
+            )
+        except Exception as save_error:
+            app.logger.exception("Failed to persist prediction: %s", save_error)
+
         dct = {
             'churned': int(pred['prediction']),
-            'status': 'Churned' if int(pred['prediction']) == 1 else 'Not Churned',
+            'status': results,
             'probability': pred['probability'],
         }
         return jsonify(dct)
@@ -89,6 +140,27 @@ def predict_api():
 def model_comparison_api():
     comparison = get_model_comparison_metrics()
     return jsonify(comparison)
+
+
+@app.route('/dashboardStatsAPI', methods=['GET'])
+@cross_origin()
+def dashboard_stats_api():
+    stats = DashboardService.get_dashboard_stats()
+    return jsonify(stats)
+
+
+@app.route('/retrainAPI', methods=['POST'])
+@cross_origin()
+def retrain_api():
+    try:
+        result = retrain_from_db()
+        return jsonify(result), 200
+    except Exception as exc:
+        app.logger.exception("Retrain failed: %s", exc)
+        return jsonify({
+            'status': 'error',
+            'reason': 'Retrain failed on the server. Check logs for details.'
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

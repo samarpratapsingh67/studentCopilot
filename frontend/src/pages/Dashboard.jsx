@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import { fetchDashboardStats, fetchModelComparison, triggerRetrain } from '../services/api';
 
 const hardcodedComparison = [
   { model: 'CatBoosting Regressor', score: 0.979186 },
@@ -13,11 +15,71 @@ const hardcodedComparison = [
 ];
 
 const formatScore = (value) => Number(value || 0).toFixed(6);
+const formatCount = (value) => Number(value || 0).toLocaleString();
+
+const formatDateTime = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString();
+};
 
 const Dashboard = ({ onGoPredict }) => {
-  const comparison = hardcodedComparison;
+  const [comparison, setComparison] = useState(hardcodedComparison);
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState('');
+  const [retrainStatus, setRetrainStatus] = useState(null);
+  const [retrainLoading, setRetrainLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadDashboard = async () => {
+      try {
+        const [comparisonData, statsData] = await Promise.all([
+          fetchModelComparison().catch(() => hardcodedComparison),
+          fetchDashboardStats(),
+        ]);
+
+        if (!active) return;
+
+        setComparison(Array.isArray(comparisonData) && comparisonData.length ? comparisonData : hardcodedComparison);
+        setStats(statsData);
+      } catch (err) {
+        if (!active) return;
+        setError(err?.response?.data?.error || err?.message || 'Unable to load dashboard stats.');
+        setStats(null);
+        setComparison(hardcodedComparison);
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const bestModel = comparison[0]?.model || '-';
   const bestModelScore = comparison[0]?.score;
+
+  const handleRetrain = async () => {
+    setRetrainLoading(true);
+    setRetrainStatus(null);
+    setError('');
+
+    try {
+      const result = await triggerRetrain();
+      setRetrainStatus(result);
+      const statsData = await fetchDashboardStats();
+      setStats(statsData);
+    } catch (err) {
+      const message = err?.response?.data?.error || err?.message || 'Retrain failed. Please try again.';
+      setError(message);
+    } finally {
+      setRetrainLoading(false);
+    }
+  };
 
   return (
     <section className="space-y-6">
@@ -28,9 +90,57 @@ const Dashboard = ({ onGoPredict }) => {
           Metrics below are computed from your Netflix churn dataset split and model setup from training.
           Best model is highlighted by F1 Score.
         </p>
-        <button type="button" className="primary-btn mt-5" onClick={onGoPredict}>
-          Score a Customer
-        </button>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button type="button" className="primary-btn" onClick={onGoPredict}>
+            Score a Customer
+          </button>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={handleRetrain}
+            disabled={retrainLoading}
+          >
+            {retrainLoading ? 'Retraining...' : 'Retrain Model'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <Card className="border-amber-500/40 bg-amber-950/20" title="Dashboard Warning">
+          <p className="text-sm text-amber-100">{error}</p>
+        </Card>
+      )}
+
+      {retrainStatus && (
+        <Card className="border-emerald-500/40 bg-emerald-950/20" title="Retrain Status">
+          <p className="text-sm text-emerald-100">
+            {retrainStatus.status === 'success'
+              ? `Retrain completed with ${formatCount(retrainStatus.records_used)} records.`
+              : `Retrain skipped: ${retrainStatus.reason || 'Not enough data.'}`}
+          </p>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="animate-fadeUp" title="Users Stored in DB">
+          <p className="text-3xl font-semibold text-white">{formatCount(stats?.total_predictions)}</p>
+          <p className="mt-2 text-sm text-slate-400">Total prediction rows saved from frontend submissions</p>
+        </Card>
+
+        <Card className="animate-fadeUp" title="Records Ready for Retraining">
+          <p className="text-3xl font-semibold text-emerald-300">{formatCount(stats?.records_ready_for_retraining)}</p>
+          <p className="mt-2 text-sm text-slate-400">These rows can be used in the next retraining run</p>
+        </Card>
+
+        <Card className="animate-fadeUp" title="Used in Latest Retrain">
+          <p className="text-3xl font-semibold text-white">{formatCount(stats?.latest_training_sample_size)}</p>
+          <p className="mt-2 text-sm text-slate-400">Rows included in the last retraining run</p>
+        </Card>
+
+        <Card className="animate-fadeUp" title="Latest Retrain At">
+          <p className="text-lg font-semibold text-white">{formatDateTime(stats?.latest_retrain_at)}</p>
+          <p className="mt-2 text-sm text-slate-400">Most recent training or evaluation timestamp</p>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
