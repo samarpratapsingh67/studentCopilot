@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/predictAPI",
+      "destination": "http://43.205.216.10:5000/predictAPI"
+    },
+    {
+      "source": "/modelComparisonAPI",
+      "destination": "http://43.205.216.10:5000/modelComparisonAPI"
+    },
+    {
+      "source": "/dashboardStatsAPI",
+      "destination": "http://43.205.216.10:5000/dashboardStatsAPI"
+    },
+    {
+      "source": "/retrainAPI",
+      "destination": "http://43.205.216.10:5000/retrainAPI"
+    },
+    {
+      "source": "/health",
+      "destination": "http://43.205.216.10:5000/health"
+    }
+  ]
+}
