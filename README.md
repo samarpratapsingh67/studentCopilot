@@ -1,288 +1,184 @@
-# Gemstone Price Prediction - Utkarsh Gaikwad
+# Customer Churn Model - AWS Deployment
 
-### Introduction About the Data :
+A production-ready ML application with real-time predictions, database persistence, and model retraining capabilities.
 
-Please this project is of a student. Just wanted to appreciate for knowledge sharing 
+---
 
-**The dataset** The goal is to predict `price` of given diamond (Regression Analysis).
+## 🚀 **LIVE DEPLOYMENT LINKS**
 
-There are 10 independent variables (including `id`):
-
-* `id` : unique identifier of each diamond
-* `carat` : Carat (ct.) refers to the unique unit of weight measurement used exclusively to weigh gemstones and diamonds.
-* `cut` : Quality of Diamond Cut
-* `color` : Color of Diamond
-* `clarity` : Diamond clarity is a measure of the purity and rarity of the stone, graded by the visibility of these characteristics under 10-power magnification.
-* `depth` : The depth of diamond is its height (in millimeters) measured from the culet (bottom tip) to the table (flat, top surface)
-* `table` : A diamond's table is the facet which can be seen when the stone is viewed face up.
-* `x` : Diamond X dimension
-* `y` : Diamond Y dimension
-* `x` : Diamond Z dimension
-
-Target variable:
-* `price`: Price of the given Diamond.
-
-Dataset Source Link :
-[https://www.kaggle.com/competitions/playground-series-s3e8/data?select=train.csv](https://www.kaggle.com/competitions/playground-series-s3e8/data?select=train.csv)
-
-### It is observed that the categorical variables 'cut', 'color' and 'clarity' are ordinal in nature
-
-### Check this link for details : [American Gem Society](https://www.americangemsociety.org/ags-diamond-grading-system/)
-
-# AWS Deployment Links (Live)
-
-## **Frontend (Vercel)**
-- **URL**: [Deploy to Vercel](https://vercel.com) → Import your GitHub repo
+### **Frontend (Vercel)**
+- **Status**: Ready for deployment
+- **Guide**: See "Deploy Frontend on Vercel" section below
 - **Repository**: https://github.com/samarpratapsingh67/Self-Learning-Customer-Churn-Model
 
-## **Backend API (EC2)**
+### **Backend API (EC2)**
 - **URL**: `http://43.205.216.10:5000`
 - **Health Check**: `http://43.205.216.10:5000/health`
-- **Instance**: AWS EC2 (t3.micro, Amazon Linux 2)
+- **Instance**: AWS EC2 t3.micro (Amazon Linux 2)
 - **Region**: ap-south-1 (Mumbai)
+- **Docker Image**: `pratapsamar821/churn-backend:latest`
 
-## **Database (RDS PostgreSQL)**
+### **Database (RDS PostgreSQL)**
 - **Endpoint**: `churn-db.c70oe2qu8iu3.ap-south-1.rds.amazonaws.com`
 - **Port**: 5432
-- **Database**: `postgres`
-- **Status**: Available (free tier)
+- **Status**: Available (free tier eligible)
 
-## **Docker Image (DockerHub)**
-- **Repository**: `https://hub.docker.com/r/pratapsamar821/churn-backend`
-- **Image**: `pratapsamar821/churn-backend:latest`
+---
 
-## **Key AWS Resources**
-- **EC2 Security Group**: `churn-backend-sg` (allows port 5000)
-- **RDS Security Group**: `churn-db-sg` (PostgreSQL port 5432)
-- **VPC**: Default VPC
+## 📋 **API ENDPOINTS**
 
-## **API Endpoints**
-
-### Health Check
-```
+```bash
+# Health Check
 GET /health
 Response: {"status": "healthy"}
-```
 
-### Prediction
-```
+# Make Prediction
 POST /predictAPI
-Body: {customer features as JSON}
-Response: {prediction result with probability}
-```
+Body: {customer_features_as_json}
+Response: {prediction, probability, segment}
 
-### Dashboard Stats
-```
+# Get Dashboard Stats
 GET /dashboardStatsAPI
-Response: {
-  "total_predictions": count,
-  "churned_predictions": count,
-  "not_churned_predictions": count,
-  "total_retrain_runs": count,
-  "latest_retrain_metrics": {...}
-}
-```
+Response: {total_predictions, churned_count, not_churned_count, retrain_metrics}
 
-### Manual Retrain
-```
+# Trigger Model Retrain
 POST /retrainAPI
-Response: {
-  "success": bool,
-  "message": "description",
-  "metrics": {...}
-}
-```
-
-## **Testing the Deployment**
-
-### Test Backend API (Windows PowerShell)
-```powershell
-# Health check
-Invoke-WebRequest http://43.205.216.10:5000/health -UseBasicParsing
-
-# Test prediction
-$body = @{
-    age = 35
-    credit_score = 750
-    tenure = 5
-} | ConvertTo-Json
-
-Invoke-WebRequest -Uri "http://43.205.216.10:5000/predictAPI" `
-  -Method POST `
-  -Body $body `
-  -ContentType "application/json" `
-  -UseBasicParsing
-```
-
-## **Testing the Deployment**
-
-### Test Backend API (Windows PowerShell)
-```powershell
-# Health check
-Invoke-WebRequest http://43.205.216.10:5000/health -UseBasicParsing
-
-# Test prediction
-$body = @{
-    age = 35
-    credit_score = 750
-    tenure = 5
-} | ConvertTo-Json
-
-Invoke-WebRequest -Uri "http://43.205.216.10:5000/predictAPI" `
-  -Method POST `
-  -Body $body `
-  -ContentType "application/json" `
-  -UseBasicParsing
-```
-
-### Test Frontend
-1. Open the Vercel deployed URL
-2. Go to "Predict" tab
-3. Enter customer data
-4. Click "Predict" 
-5. Go to "Dashboard" tab to see stored predictions
-
----
-
-## **Deployment Architecture**
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Client Browser                        │
-└──────────────────────┬──────────────────────────────────┘
-                       │ HTTPS
-                       ▼
-       ┌───────────────────────────────────┐
-       │    Frontend (Vercel)              │
-       │  - React + Vite                   │
-       │  - Tailwind CSS                   │
-       │  - Real-time dashboard            │
-       │  - Manual retrain button          │
-       └─────────────┬───────────────────┘
-                     │ HTTP (port 5000)
-                     ▼
-       ┌───────────────────────────────────┐
-       │    Backend (EC2)                  │
-       │  - Flask + Gunicorn               │
-       │  - Docker container               │
-       │  - ML model endpoints             │
-       │  - Database integration           │
-       └─────────────┬───────────────────┘
-                     │ TCP (port 5432)
-                     ▼
-       ┌───────────────────────────────────┐
-       │    Database (RDS PostgreSQL)      │
-       │  - Prediction records storage     │
-       │  - Model metrics storage          │
-       │  - Retrain history logs           │
-       └───────────────────────────────────┘
+Response: {success, message, metrics}
 ```
 
 ---
 
-## **How to Deploy (Step-by-Step)**
+## 🧪 **QUICK TEST COMMANDS**
 
-### **Option 1: Deploy Frontend on Vercel**
+### Test Backend (Windows PowerShell)
+```powershell
+# Health check
+Invoke-WebRequest http://43.205.216.10:5000/health -UseBasicParsing
+
+# Get dashboard stats
+Invoke-WebRequest http://43.205.216.10:5000/dashboardStatsAPI -UseBasicParsing
+```
+
+---
+
+## 🏗️ **ARCHITECTURE**
+
+```
+Browser (Vercel)
+    ↓ HTTPS
+React + Vite Frontend
+    ↓ HTTP:5000
+Flask Backend (EC2 Docker)
+    ↓ TCP:5432
+PostgreSQL (RDS)
+```
+
+---
+
+## 📦 **FEATURES**
+
+✅ **Real-time Predictions** - ML inference with automatic database storage  
+✅ **Dashboard Analytics** - Live statistics from stored predictions  
+✅ **Model Retraining** - Manual retrain button using historical data (min 25 records)  
+✅ **Persistence** - All predictions and metrics saved to RDS PostgreSQL  
+✅ **Containerized** - Docker backend for easy scaling  
+✅ **Cloud-Ready** - Deployed on AWS (EC2, RDS, free tier eligible)  
+
+---
+
+## 📥 **DEPLOYMENT GUIDE**
+
+### **Step 1: Deploy Frontend on Vercel**
+
 1. Go to https://vercel.com
-2. Click "Add New" → "Project"
-3. Select your GitHub repo
-4. Set **Root Directory** to `frontend`
-5. Add **Environment Variable**:
-   - `VITE_API_BASE_URL=http://43.205.216.10:5000`
-6. Click **Deploy**
-
-### **Option 2: Deploy Backend on EC2 (Docker)**
-1. Build Docker image locally:
-   ```powershell
-   docker build -t churn-backend .
-   docker tag churn-backend pratapsamar821/churn-backend:latest
-   docker push pratapsamar821/churn-backend:latest
+2. Sign up with GitHub
+3. Click **Add New** → **Project**
+4. Select: `Self-Learning-Customer-Churn-Model`
+5. Configure:
+   - **Framework**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+6. Add **Environment Variable**:
    ```
-
-2. SSH into EC2:
-   ```powershell
-   ssh -i "churn-key.pem" ec2-user@43.205.216.10
+   VITE_API_BASE_URL = http://43.205.216.10:5000
    ```
-
-3. Pull and run container:
-   ```bash
-   docker pull pratapsamar821/churn-backend:latest
-   docker run -d --name churn-backend -p 5000:5000 \
-     -e DATABASE_URL="postgresql+psycopg2://postgres:PASSWORD@churn-db.c70oe2qu8iu3.ap-south-1.rds.amazonaws.com:5432/postgres" \
-     pratapsamar821/churn-backend:latest
-   ```
-
-4. Verify running:
-   ```bash
-   docker ps
-   ```
-
-### **Option 3: Create RDS Database**
-1. Go to AWS RDS Console
-2. Create PostgreSQL database
-3. Make it publicly accessible (for testing)
-4. Update security group to allow port 5432
+7. Click **Deploy**
+8. Wait 2-3 minutes for build to complete
+9. Open the live URL provided by Vercel
 
 ---
 
-## **Local Development Setup**
+### **Step 2: Backend Already Running on EC2**
 
-### Backend
+The backend Docker container is already deployed and running at:
+```
+http://43.205.216.10:5000
+```
+
+To verify it's working:
+```powershell
+Invoke-WebRequest http://43.205.216.10:5000/health -UseBasicParsing
+```
+
+---
+
+### **Step 3: Test End-to-End**
+
+1. Open your Vercel frontend URL
+2. Navigate to **Predict** tab
+3. Enter customer data (age, credit_score, tenure, etc.)
+4. Click **Predict**
+5. See the prediction result
+6. Go to **Dashboard** tab
+7. Verify prediction is stored and appears in statistics
+
+---
+
+## 💻 **LOCAL DEVELOPMENT**
+
+### Backend Setup
 ```bash
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 python application.py
+# Backend runs on http://localhost:5000
 ```
 
-### Frontend
+### Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
+# Frontend runs on http://localhost:5173
 ```
 
-Open http://localhost:5173
+---
+
+## 🔧 **ENVIRONMENT VARIABLES**
+
+### Backend (.env or container env)
+```
+DATABASE_URL=postgresql+psycopg2://postgres:PASSWORD@churn-db.c70oe2qu8iu3.ap-south-1.rds.amazonaws.com:5432/postgres
+PORT=5000
+ALLOWED_ORIGINS=*
+```
+
+### Frontend (.env.local or Vercel)
+```
+VITE_API_BASE_URL=http://43.205.216.10:5000
+```
 
 ---
 
-## **Features**
-
-### Prediction
-- Real-time ML model inference
-- Automatic prediction persistence to RDS PostgreSQL
-- Support for multiple ML algorithms (CatBoost, XGBoost, KNN ensemble)
-
-### Dashboard & Analytics
-- Live prediction statistics (total predictions, churn count)
-- Retrain history and metrics tracking
-- Model performance comparison
-
-### Model Retraining
-- Manual retrain button in dashboard
-- Automatic retrain from stored predictions (min. 25 records required)
-- Retrain metrics persistence
-- Support for both churn classes
-
-### Deployment Ready
-- Docker containerized backend
-- Vercel-hosted frontend
-- AWS RDS for database persistence
-- EC2 for scalable compute
-
----
-
-## **Project Structure**
+## 📁 **PROJECT STRUCTURE**
 
 ```
 .
-├── application.py              # Flask app entry point
+├── application.py              # Flask app with API routes
 ├── requirements.txt            # Python dependencies
 ├── Dockerfile                  # Backend containerization
-├── artifacts/                  # Data files
-│   ├── data.csv
-│   ├── train.csv
-│   └── test.csv
 ├── src/
 │   ├── components/
 │   │   ├── data_ingestion.py
@@ -294,117 +190,116 @@ Open http://localhost:5173
 │   │   └── retrain_pipeline.py
 │   ├── database/
 │   │   ├── models.py           # SQLAlchemy models
-│   │   └── services.py         # DB services
+│   │   └── services.py         # DB CRUD operations
 │   ├── exception.py
 │   ├── logger.py
 │   └── utils.py
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── Predict.jsx
-│   │   │   └── Dashboard.jsx
-│   │   ├── components/
+│   │   │   ├── Predict.jsx     # Prediction UI
+│   │   │   └── Dashboard.jsx   # Analytics dashboard
 │   │   ├── services/
-│   │   │   └── api.js          # API client
-│   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   │   └── api.js          # API client (points to EC2)
+│   │   └── App.jsx
 │   ├── vite.config.js
-│   ├── tailwind.config.js
 │   └── package.json
-├── notebooks/
-│   ├── 1_EDA_Gemstone_price.ipynb
-│   ├── 2_Model_Training_Gemstone.ipynb
-│   └── 3_Explainability_with_LIME.ipynb
-└── README.md
+├── artifacts/
+│   ├── train.csv
+│   ├── test.csv
+│   └── data.csv
+└── notebooks/
+    ├── 1_EDA_Gemstone_price.ipynb
+    ├── 2_Model_Training_Gemstone.ipynb
+    └── 3_Explainability_with_LIME.ipynb
 ```
 
 ---
 
-## **Environment Variables**
+## 🚨 **TROUBLESHOOTING**
 
-### Backend (.env)
-```
-DATABASE_URL=postgresql+psycopg2://postgres:PASSWORD@host:5432/postgres
-PORT=5000
-ALLOWED_ORIGINS=*
-```
-
-### Frontend (.env.local)
-```
-VITE_API_BASE_URL=http://43.205.216.10:5000
-```
-
----
-
-## **Troubleshooting**
-
-### Backend not reachable
+### ❌ "Unable to connect to backend"
 - Check EC2 security group allows port 5000
 - Verify Docker container is running: `docker ps`
-- Check container logs: `docker logs churn-backend`
+- SSH into EC2 and check logs: `docker logs churn-backend`
 
-### Database connection failed
-- Verify RDS endpoint and password
-- Check RDS security group allows port 5432
-- Confirm EC2 and RDS are in same VPC or have proper routing
+### ❌ "Database connection failed"
+- Verify RDS endpoint is correct
+- Check RDS password is correct
+- Verify RDS security group allows port 5432 from EC2
 
-### Frontend API calls failing
-- Check CORS is enabled in Flask (`ALLOWED_ORIGINS="*"`)
-- Verify `VITE_API_BASE_URL` environment variable is set
-- Check browser console for actual error messages
+### ❌ "Frontend API calls failing"
+- Check `VITE_API_BASE_URL` env var is set on Vercel
+- Verify Flask CORS is enabled: `ALLOWED_ORIGINS=*`
+- Check browser console for detailed error messages
 
 ---
 
-# Screenshot of UI
+## 📊 **KEY AWS RESOURCES**
 
-![HomepageUI](./Screenshots/HomepageUI.jpg)
+| Resource | Details |
+|----------|---------|
+| **EC2 Instance** | t3.micro, 43.205.216.10, Amazon Linux 2 |
+| **EC2 Security Group** | `churn-backend-sg`, allows port 5000 |
+| **RDS Database** | PostgreSQL, free tier, publicly accessible |
+| **RDS Security Group** | `churn-db-sg`, allows port 5432 |
+| **Docker Image** | pratapsamar821/churn-backend:latest |
+| **Frontend Host** | Vercel (auto-deployed from GitHub) |
 
-# YouTube Video Link
+---
 
-Link for YouTube Video : Click the below thumbnail to open 
+## 🔄 **DEPLOYMENT WORKFLOW**
 
-[![https://youtu.be/Xvk5r0t_RQw](https://i.ytimg.com/vi/Xvk5r0t_RQw/hqdefault.jpg?sqp=-oaymwEcCNACELwBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBbp5SouquUm3Y3t-NYfOYsg4N4oQ)](https://youtu.be/Xvk5r0t_RQw)
+```
+1. Edit code locally
+   ↓
+2. Push to GitHub
+   ↓
+3. Vercel auto-deploys frontend
+   ↓
+4. Backend already running on EC2
+   ↓
+5. Test at Vercel URL
+```
 
-# AWS API Link
+---
 
-API Link : [http://gemstonepriceutkarshgaikwad-env.eba-7zp3wapg.ap-south-1.elasticbeanstalk.com/predictAPI](http://gemstonepriceutkarshgaikwad-env.eba-7zp3wapg.ap-south-1.elasticbeanstalk.com/predictAPI)
+## 📝 **ORIGINAL PROJECT INFO**
 
-# Postman Testing of API :
+**Original Dataset**: Gemstone Price Prediction  
+**Dataset Source**: [Kaggle Playground Series](https://www.kaggle.com/competitions/playground-series-s3e8/data)  
 
-![API Prediction](./Screenshots/APIPrediction.jpg)
+### Model Approach:
+1. **Data Ingestion** - CSV loading and train/test split
+2. **Data Transformation** - Feature engineering with ColumnTransformer
+3. **Model Training** - CatBoost, XGBoost, KNN ensemble with hyperparameter tuning
+4. **Prediction Pipeline** - Real-time inference with database persistence
+5. **Flask App** - Web UI for predictions and dashboard
 
-# Approach for the project 
+### Original Notebooks:
+- [EDA Analysis](./notebook/1_EDA_Gemstone_price.ipynb)
+- [Model Training](./notebook/2_Model_Training_Gemstone.ipynb)
+- [LIME Explainability](./notebook/3_Explainability_with_LIME.ipynb)
 
-1. Data Ingestion : 
-    * In Data Ingestion phase the data is first read as csv. 
-    * Then the data is split into training and testing and saved as csv file.
+---
 
-2. Data Transformation : 
-    * In this phase a ColumnTransformer Pipeline is created.
-    * for Numeric Variables first SimpleImputer is applied with strategy median , then Standard Scaling is performed on numeric data.
-    * for Categorical Variables SimpleImputer is applied with most frequent strategy, then ordinal encoding performed , after this data is scaled with Standard Scaler.
-    * This preprocessor is saved as pickle file.
+## 🎯 **NEXT STEPS**
 
-3. Model Training : 
-    * In this phase base model is tested . The best model found was catboost regressor.
-    * After this hyperparameter tuning is performed on catboost and knn model.
-    * A final VotingRegressor is created which will combine prediction of catboost, xgboost and knn models.
-    * This model is saved as pickle file.
+1. ✅ Deploy frontend on Vercel (follow Step 1 above)
+2. ✅ Test predictions at your Vercel URL
+3. ✅ Monitor dashboard stats
+4. ✅ Test manual retrain feature
+5. ✅ Share your live deployment link!
 
-4. Prediction Pipeline : 
-    * This pipeline converts given data into dataframe and has various functions to load pickle files and predict the final results in python.
+---
 
-5. Flask App creation : 
-    * Flask app is created with User Interface to predict the gemstone prices inside a Web Application.
+## 📧 **SUPPORT**
 
-# Exploratory Data Analysis Notebook
+- **Backend Issues**: SSH to EC2 and check `docker logs churn-backend`
+- **Database Issues**: Check RDS console for endpoint/security groups
+- **Frontend Issues**: Check Vercel deployment logs
+- **API Testing**: Use Postman or PowerShell commands above
 
-Link : [EDA Notebook](./notebook/1_EDA_Gemstone_price.ipynb)
+---
 
-# Model Training Approach Notebook
-
-Link : [Model Training Notebook](./notebook/2_Model_Training_Gemstone.ipynb)
-
-# Model Interpretation with LIME 
-
-Link : [LIME Interpretation](./notebook/3_Explainability_with_LIME.ipynb)
+**Status**: 🟢 Production Ready | All services running | AWS free tier eligible
